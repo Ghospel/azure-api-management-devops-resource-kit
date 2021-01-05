@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 
 namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
@@ -44,6 +44,8 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
         public string paramApiLoggerId { get; set; }
         [Description("Specify the resourceId for this logger")]
         public string paramLogResourceId { get; set; }
+        [Description("Parameterize version set")]
+        public string paramVersionSetId { get; set; }
         [Description("Specify the the base url for calling api management")]
         public string serviceBaseUrl { get; set; }
         public void Validate()
@@ -104,6 +106,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
         public bool paramNamedValue { get; private set; }
         public bool paramApiLoggerId { get; private set; }
         public bool paramLogResourceId { get; private set; }
+        public bool paramVersionSetId { get; private set; }
 
         public Extractor(ExtractorConfig exc, string dirName)
         {
@@ -123,6 +126,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
             this.paramNamedValue = exc.paramNamedValue != null && exc.paramNamedValue.Equals("true");
             this.paramApiLoggerId = exc.paramApiLoggerId != null && exc.paramApiLoggerId.Equals("true");
             this.paramLogResourceId = exc.paramLogResourceId != null && exc.paramLogResourceId.Equals("true");
+            this.paramVersionSetId = exc.paramVersionSetId != null && exc.paramVersionSetId.Equals("true");
         }
 
         public Extractor(ExtractorConfig exc) : this(exc, exc.fileFolder)

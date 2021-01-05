@@ -131,6 +131,10 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
             {
                 masterResourceTemplate.properties.parameters.Add(ParameterNames.ApiLoggerId, new TemplateParameterProperties() { value = $"[parameters('{ParameterNames.ApiLoggerId}')]" });
             }
+            if (exc.paramVersionSetId)
+            {
+                masterResourceTemplate.properties.parameters.Add(ParameterNames.VersionSetId, new TemplateParameterProperties() { value = $"[parameters('{ParameterNames.VersionSetId}')]" });
+            }
             return masterResourceTemplate;
         }
 
@@ -328,6 +332,18 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                 };
                 parameters.Add(ParameterNames.LoggerResourceId, loggerResourceIdProperties);
             }
+            if (exc.paramVersionSetId)
+            {
+                TemplateParameterProperties versionSetIdProperties = new TemplateParameterProperties()
+                {
+                    metadata = new TemplateParameterMetadata()
+                    {
+                        description = "Version Set Id for each Api"
+                    },
+                    type = "object"
+                };
+                parameters.Add(ParameterNames.VersionSetId, versionSetIdProperties);
+            }
             return parameters;
         }
 
@@ -482,6 +498,32 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                     value = loggerResourceIds
                 };
                 parameters.Add(ParameterNames.LoggerResourceId, loggerResourceIdProperties);
+            }
+            if (exc.paramVersionSetId)
+            {
+                Dictionary<string, string> versionSetIds = new Dictionary<string, string>();
+                APIExtractor apiExc = new APIExtractor(new FileWriter());
+                foreach (string apiName in apisToExtract)
+                {
+                    string validApiName = ExtractorUtils.GenValidParamName(apiName, ParameterPrefix.Api);
+                    string apiDetails = await apiExc.GetAPIDetailsAsync(exc.sourceApimName, exc.resourceGroup, apiName);
+                    APITemplateResource apiResource = JsonConvert.DeserializeObject<APITemplateResource>(apiDetails);
+                    if (apiResource.properties.apiVersionSetId != null)
+                    {
+                        apiResource.dependsOn = new string[] { };
+
+                        string versionSetName = apiResource.properties.apiVersionSetId;
+                        int versionSetPosition = versionSetName.IndexOf("apiVersionSets/");
+
+                        versionSetName = versionSetName.Substring(versionSetPosition);
+                        versionSetIds.Add(validApiName, versionSetName);
+                    }
+                }
+                TemplateObjectParameterProperties versionSetIdProperties = new TemplateObjectParameterProperties()
+                {
+                    value = versionSetIds
+                };
+                parameters.Add(ParameterNames.VersionSetId, versionSetIdProperties);
             }
             masterTemplate.parameters = parameters;
             return masterTemplate;

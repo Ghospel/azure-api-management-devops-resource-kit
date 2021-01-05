@@ -166,6 +166,14 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                 };
                 armTemplate.parameters.Add(ParameterNames.ApiLoggerId, apiLoggerProperty);
             }
+            if (exc.paramVersionSetId)
+            {
+                TemplateParameterProperties serviceUrlParamProperty = new TemplateParameterProperties()
+                {
+                    type = "object"
+                };
+                armTemplate.parameters.Add(ParameterNames.VersionSetId, serviceUrlParamProperty);
+            }
             return armTemplate;
         }
     }

@@ -31,6 +31,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Common
         public const string LinkedTemplatesSasToken = "LinkedTemplatesSasToken";
         public const string ApimServiceName = "ApimServiceName";
         public const string LinkedTemplatesBaseUrl = "LinkedTemplatesBaseUrl";
+        public const string VersionSetId = "VersionSetId";
     }
 
     public static class ParameterPrefix
