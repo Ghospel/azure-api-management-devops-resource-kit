@@ -4,6 +4,7 @@ using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract;
 using Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create;
 using Microsoft.Azure.Management.ApiManagement.ArmTemplates.Common;
+using Microsoft.Azure.Management.ApiManagement.ArmTemplates.Merge;
 
 namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates
 {
@@ -29,7 +30,8 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates
                 app.HelpOption(inherited: true);
                 app.Commands.Add(new CreateCommand());
                 app.Commands.Add(new ExtractCommand());
-                
+                app.Commands.Add(new MergeCommand());
+
                 app.OnExecute(() => {
                     ColoredConsole.Error.WriteLine("No commands specified, please specify a command");
                     app.ShowHelp();

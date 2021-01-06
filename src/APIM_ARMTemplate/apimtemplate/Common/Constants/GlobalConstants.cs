@@ -13,6 +13,8 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Common
         public const string CreateDescription = "Create an API Management instance from files";
         public const string ExtractName = "extract";
         public const string ExtractDescription = "Extract an existing API Management instance";
+        public const string MergeName = "merge";
+        public const string MergeDescription = "Merge multiple ARM templates into a single one";
 
         public const string APIVersion = "2021-01-01-preview";
         public const string LinkedAPIVersion = "2018-05-01";
