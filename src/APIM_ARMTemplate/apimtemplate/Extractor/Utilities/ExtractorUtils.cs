@@ -108,13 +108,10 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                         {
                             var param = match.Groups[1].Value;
 
-                            newValue = newValue.Replace(match.Value, $"', parameters('{param}'), '");
-                            if (!apiTemplate.parameters.ContainsKey(param))
+                            newValue = newValue.Replace(match.Value, $"', parameters('{ParameterNames.NamedValues}').{GenValidParamName(param, ParameterPrefix.Property)}, '");
+                            if (!apiTemplate.parameters.ContainsKey(ParameterNames.NamedValues))
                             {
-                                apiTemplate.parameters.Add(param, new TemplateParameterProperties { 
-                                    type = "string",
-                                    defaultValue = match.Value
-                                });
+                                apiTemplate.parameters.Add(ParameterNames.NamedValues, new TemplateParameterProperties { type = "object" });
                             }
                         }
 

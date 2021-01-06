@@ -141,7 +141,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
             {
                 masterResourceTemplate.properties.parameters.Add(ParameterNames.PolicyXMLSasToken, new TemplateParameterProperties() { value = $"[parameters('{ParameterNames.PolicyXMLSasToken}')]" });
             }
-            if (exc.paramNamedValue)
+            if (exc.paramNamedValue || exc.paramPolicyNamedValue)
             {
                 masterResourceTemplate.properties.parameters.Add(ParameterNames.NamedValues, new TemplateParameterProperties() { value = $"[parameters('{ParameterNames.NamedValues}')]" });
             }
@@ -292,7 +292,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                 };
                 parameters.Add(ParameterNames.ServiceUrl, paramServiceUrlProperties);
             }
-            if (exc.paramNamedValue)
+            if (exc.paramNamedValue || exc.paramPolicyNamedValue)
             {
                 TemplateParameterProperties namedValueProperties = new TemplateParameterProperties()
                 {
@@ -445,7 +445,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                 };
                 parameters.Add(ParameterNames.ServiceUrl, serviceUrlProperties);
             }
-            if (exc.paramNamedValue)
+            if (exc.paramNamedValue || exc.paramPolicyNamedValue)
             {
                 Dictionary<string, string> namedValues = new Dictionary<string, string>();
                 PropertyExtractor pExc = new PropertyExtractor();
