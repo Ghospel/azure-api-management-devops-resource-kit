@@ -92,6 +92,37 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
             {
                 apiTemplate = await apiExtractor.GenerateAPIsARMTemplateAsync(singleApiName, multipleApiNames, exc);
             }
+
+            // TODO: config value for removing named values from policy template
+            if (exc.paramPolicyNamedValue)
+            {
+                foreach (var policy in apiTemplate.resources.OfType<PolicyTemplateResource>())
+                {
+                    var matches = Regex.Matches(policy.properties.value, "{{([a-zA-Z0-9-_]*)}}");
+
+                    if (matches.Count > 0)
+                    {
+                        var newValue = $"[concat('{policy.properties.value}')]";
+
+                        foreach (Match match in matches)
+                        {
+                            var param = match.Groups[1].Value;
+
+                            newValue = newValue.Replace(match.Value, $"', parameters('{param}'), '");
+                            if (!apiTemplate.parameters.ContainsKey(param))
+                            {
+                                apiTemplate.parameters.Add(param, new TemplateParameterProperties { 
+                                    type = "string",
+                                    defaultValue = match.Value
+                                });
+                            }
+                        }
+
+                        policy.properties.value = newValue;
+                    }
+                }
+            }
+
             List<TemplateResource> apiTemplateResources = apiTemplate.resources.ToList();
             Template apiVersionSetTemplate = await apiVersionSetExtractor.GenerateAPIVersionSetsARMTemplateAsync(sourceApim, resourceGroup, singleApiName, apiTemplateResources, policyXMLBaseUrl, policyXMLSasToken);
             Template authorizationServerTemplate = await authorizationServerExtractor.GenerateAuthorizationServersARMTemplateAsync(sourceApim, resourceGroup, singleApiName, apiTemplateResources, policyXMLBaseUrl, policyXMLSasToken);
