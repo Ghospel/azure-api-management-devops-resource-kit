@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 
 namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
@@ -26,6 +26,8 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
         public string policyXMLBaseUrl { get; set; }
         [Description("String appended to end of the linked templates uris that enables adding a SAS token or other query parameters")]
         public string policyXMLSasToken { get; set; }
+        [Description("Split operations into multiple templates")]
+        public string splitAPIOperations { get; set; }
         [Description("Split APIs into multiple templates")]
         public string splitAPIs { get; set; }
         [Description("Name of the apiVersionSet you want to extract")]
