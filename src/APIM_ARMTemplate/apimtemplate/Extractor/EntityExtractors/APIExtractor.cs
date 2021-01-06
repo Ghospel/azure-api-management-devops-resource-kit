@@ -241,7 +241,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
             if (exc.paramVersionSetId)
             {
                 apiResource.dependsOn = new string[] { };
-                apiResource.properties.apiVersionSetId = $"[concat(resourceId('Microsoft.ApiManagement/service', parameters('{ParameterNames.ApimServiceName}')), ',', parameters('{ParameterNames.VersionSetId}').{ExtractorUtils.GenValidParamName(apiName, ParameterPrefix.Api)})]";
+                apiResource.properties.apiVersionSetId = $"[concat(resourceId('Microsoft.ApiManagement/service', parameters('{ParameterNames.ApimServiceName}')), '/apiVersionSets/', parameters('{ParameterNames.VersionSetId}').{ExtractorUtils.GenValidParamName(apiName, ParameterPrefix.Api)})]";
             }
             else
             {
@@ -555,7 +555,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
             if (exc.paramVersionSetId)
             {
                 apiResource.dependsOn = new string[] { };
-                apiResource.properties.apiVersionSetId = $"[concat(resourceId('Microsoft.ApiManagement/service', parameters('{ParameterNames.ApimServiceName}')), '/', parameters('{ParameterNames.VersionSetId}').{ExtractorUtils.GenValidParamName(apiName, ParameterPrefix.Api)})]";
+                apiResource.properties.apiVersionSetId = $"[concat(resourceId('Microsoft.ApiManagement/service', parameters('{ParameterNames.ApimServiceName}')), '/apiVersionSets/', parameters('{ParameterNames.VersionSetId}').{ExtractorUtils.GenValidParamName(apiName, ParameterPrefix.Api)})]";
             }
             else
             {
