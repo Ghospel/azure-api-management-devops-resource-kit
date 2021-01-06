@@ -106,6 +106,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
         public bool paramNamedValue { get; private set; }
         public bool paramApiLoggerId { get; private set; }
         public bool paramLogResourceId { get; private set; }
+        public bool splitAPIOperations { get; private set; }
 
         public Extractor(ExtractorConfig exc, string dirName)
         {
@@ -125,6 +126,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
             this.paramNamedValue = exc.paramNamedValue != null && exc.paramNamedValue.Equals("true");
             this.paramApiLoggerId = exc.paramApiLoggerId != null && exc.paramApiLoggerId.Equals("true");
             this.paramLogResourceId = exc.paramLogResourceId != null && exc.paramLogResourceId.Equals("true");
+            this.splitAPIOperations = exc.splitAPIOperations != null && exc.splitAPIOperations.EndsWith("true");
         }
 
         public Extractor(ExtractorConfig exc) : this(exc, exc.fileFolder)

@@ -35,7 +35,6 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
 
                     string singleApiName = extractorConfig.apiName;
                     bool splitAPIs = extractorConfig.splitAPIs != null && extractorConfig.splitAPIs.Equals("true");
-                    bool splitOperations = extractorConfig.splitAPIOperations != null && extractorConfig.splitAPIOperations.Equals("true");
                     bool hasVersionSetName = extractorConfig.apiVersionSetName != null;
                     bool hasSingleApi = singleApiName != null;
                     bool includeRevisions = extractorConfig.includeAllRevisions != null && extractorConfig.includeAllRevisions.Equals("true");
@@ -55,7 +54,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                     {
                         // create split api templates for all apis in the sourceApim
                         await ExtractorUtils.GenerateSplitAPITemplates(extractorConfig, fileNameGenerator, fileWriter, fileNames);
-                        await ExtractorUtils.GenerateTemplates(new Extractor(extractorConfig), null, null, splitOperations, fileNameGenerator, fileNames, fileWriter, null);
+                        await ExtractorUtils.GenerateTemplates(new Extractor(extractorConfig), null, null, fileNameGenerator, fileNames, fileWriter, null);
                     }
                     else if (hasVersionSetName)
                     {
@@ -83,7 +82,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                         {
                             Console.WriteLine("Executing full extraction ...");
                         }
-                        await ExtractorUtils.GenerateTemplates(new Extractor(extractorConfig), singleApiName, null, splitOperations, fileNameGenerator, fileNames, fileWriter, null);
+                        await ExtractorUtils.GenerateTemplates(new Extractor(extractorConfig), singleApiName, null, fileNameGenerator, fileNames, fileWriter, null);
                     }
                     Console.WriteLine("Templates written to output location");
                     Console.WriteLine("Press any key to exit process:");

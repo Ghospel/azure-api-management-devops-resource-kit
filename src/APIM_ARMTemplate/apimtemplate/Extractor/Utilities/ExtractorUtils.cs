@@ -32,7 +32,6 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
             Extractor exc,
             string singleApiName,
             List<string> multipleAPINames,
-            bool splitOperations,
             FileNameGenerator fileNameGenerator,
             FileNames fileNames,
             FileWriter fileWriter,
@@ -118,7 +117,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
             // write templates to output file location
             string apiFileName = fileNameGenerator.GenerateExtractorAPIFileName(singleApiName, fileNames.baseFileName);
 
-            if (splitOperations)
+            if (exc.splitAPIOperations)
             {
                 var apiTemplateOperations = apiTemplateResources.OfType<OperationTemplateResource>().ToList();
 
@@ -215,8 +214,6 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
         // this function will generate master template for each API within this version set and an extra master template to link these apis
         public static async Task GenerateAPIVersionSetTemplates(ExtractorConfig exc, FileNameGenerator fileNameGenerator, FileNames fileNames, FileWriter fileWriter)
         {
-            bool splitOperations = exc.splitAPIOperations != null && exc.splitAPIOperations.Equals("true");
-
             // get api dictionary and check api version set
             var apiDictionary = await GetAllAPIsDictionary(exc.sourceApimName, exc.resourceGroup, fileWriter);
             if (!apiDictionary.ContainsKey(exc.apiVersionSetName))
@@ -232,13 +229,13 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                     // generate seperate folder for each API
                     string apiFileFolder = String.Concat(@exc.fileFolder, $@"/{apiName}");
                     System.IO.Directory.CreateDirectory(apiFileFolder);
-                    await GenerateTemplates(new Extractor(exc, apiFileFolder), apiName, null, splitOperations, fileNameGenerator, fileNames, fileWriter, null);
+                    await GenerateTemplates(new Extractor(exc, apiFileFolder), apiName, null, fileNameGenerator, fileNames, fileWriter, null);
                 }
 
                 // create master templates for this apiVersionSet 
                 string versionSetFolder = String.Concat(@exc.fileFolder, fileNames.versionSetMasterFolder);
                 System.IO.Directory.CreateDirectory(versionSetFolder);
-                await GenerateTemplates(new Extractor(exc, versionSetFolder), null, apiDictionary[exc.apiVersionSetName], splitOperations, fileNameGenerator, fileNames, fileWriter, null);
+                await GenerateTemplates(new Extractor(exc, versionSetFolder), null, apiDictionary[exc.apiVersionSetName], fileNameGenerator, fileNames, fileWriter, null);
 
                 Console.WriteLine($@"Finish extracting APIVersionSet {exc.apiVersionSetName}");
 
@@ -248,8 +245,6 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
         // this function will generate templates for multiple specified APIs
         public static async Task GenerateMultipleAPIsTemplates(ExtractorConfig exc, FileNameGenerator fileNameGenerator, FileWriter fileWriter, FileNames fileNames)
         {
-            bool splitOperations = exc.splitAPIOperations != null && exc.splitAPIOperations.Equals("true");
-
             if (exc.multipleAPIs == null && exc.multipleAPIs.Equals(""))
             {
                 throw new Exception("multipleAPIs parameter doesn't have any data");
@@ -268,13 +263,13 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                 // generate seperate folder for each API
                 string apiFileFolder = String.Concat(@exc.fileFolder, $@"/{apiName}");
                 System.IO.Directory.CreateDirectory(apiFileFolder);
-                await GenerateTemplates(new Extractor(exc, apiFileFolder), apiName, null, splitOperations, fileNameGenerator, fileNames, fileWriter, null);
+                await GenerateTemplates(new Extractor(exc, apiFileFolder), apiName, null, fileNameGenerator, fileNames, fileWriter, null);
             }
 
             // create master templates for these apis 
             string groupApiFolder = String.Concat(@exc.fileFolder, fileNames.groupAPIsMasterFolder);
             System.IO.Directory.CreateDirectory(groupApiFolder);
-            await GenerateTemplates(new Extractor(exc, groupApiFolder), null, apis.ToList(), splitOperations, fileNameGenerator, fileNames, fileWriter, null);
+            await GenerateTemplates(new Extractor(exc, groupApiFolder), null, apis.ToList(), fileNameGenerator, fileNames, fileWriter, null);
 
             Console.WriteLine($@"Finish extracting mutiple APIs");
         }
@@ -282,8 +277,6 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
         // this function will generate split api templates / folders for each api in this sourceApim
         public static async Task GenerateSplitAPITemplates(ExtractorConfig exc, FileNameGenerator fileNameGenerator, FileWriter fileWriter, FileNames fileNames)
         {
-            bool splitOperations = exc.splitAPIOperations != null && exc.splitAPIOperations.Equals("true");
-
             // Generate folders based on all apiversionset
             var apiDictionary = await GetAllAPIsDictionary(exc.sourceApimName, exc.resourceGroup, fileWriter);
 
@@ -305,7 +298,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                     // create master templates for each apiVersionSet
                     string versionSetFolder = String.Concat(@apiFileFolder, fileNames.versionSetMasterFolder);
                     System.IO.Directory.CreateDirectory(versionSetFolder);
-                    await GenerateTemplates(new Extractor(exc, versionSetFolder), null, versionSetEntry.Value, splitOperations, fileNameGenerator, fileNames, fileWriter, null);
+                    await GenerateTemplates(new Extractor(exc, versionSetFolder), null, versionSetEntry.Value, fileNameGenerator, fileNames, fileWriter, null);
 
                     Console.WriteLine($@"Finish extracting APIVersionSet {versionSetEntry.Key}");
                 }
@@ -317,7 +310,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                     string tempFileFolder = String.Concat(@apiFileFolder, $@"/{apiName}");
                     System.IO.Directory.CreateDirectory(tempFileFolder);
                     // generate templates for each API
-                    await GenerateTemplates(new Extractor(exc, tempFileFolder), apiName, null, splitOperations, fileNameGenerator, fileNames, fileWriter, null);
+                    await GenerateTemplates(new Extractor(exc, tempFileFolder), apiName, null, fileNameGenerator, fileNames, fileWriter, null);
 
                     Console.WriteLine($@"Finish extracting API {apiName}");
                 }
@@ -341,8 +334,6 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
         {
             Console.WriteLine("Extracting singleAPI {0} with revisions", apiName);
 
-            bool splitOperations = exc.splitAPIOperations != null && exc.splitAPIOperations.Equals("true");
-
             APIExtractor apiExtractor = new APIExtractor(fileWriter);
             // Get all revisions for this api
             string revisions = await apiExtractor.GetAPIRevisionsAsync(exc.sourceApimName, exc.resourceGroup, apiName);
@@ -362,7 +353,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
 
                 string revFileFolder = String.Concat(@exc.fileFolder, $@"/{singleApiName}");
                 System.IO.Directory.CreateDirectory(revFileFolder);
-                await GenerateTemplates(new Extractor(exc, revFileFolder), singleApiName, null, splitOperations, fileNameGenerator, fileNames, fileWriter, null);
+                await GenerateTemplates(new Extractor(exc, revFileFolder), singleApiName, null, fileNameGenerator, fileNames, fileWriter, null);
                 revList.Add(singleApiName);
             }
 
@@ -375,7 +366,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
             System.IO.Directory.CreateDirectory(revMasterFolder);
             Extractor revExc = new Extractor(exc, revMasterFolder);
             Template apiRevisionTemplate = await apiExtractor.GenerateAPIRevisionTemplateAsync(currentRevision, revList, apiName, revExc);
-            await GenerateTemplates(revExc, null, null, splitOperations, fileNameGenerator, fileNames, fileWriter, apiRevisionTemplate);
+            await GenerateTemplates(revExc, null, null, fileNameGenerator, fileNames, fileWriter, apiRevisionTemplate);
         }
 
         // this function will generate an api dictionary with apiName/versionsetName (if exist one) as key, list of apiNames as value
