@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Microsoft.Azure.Management.ApiManagement.ArmTemplates.Common;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
 {
@@ -185,6 +186,37 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                 dependsOn = dependsOn
             };
             return masterTemplateResource;
+        }
+
+        public NestedTemplateResource CreateNestedMasterTemplateResource(string name, string[] dependsOn, JObject nestedTemplate, IEnumerable<KeyValuePair<string, TemplateParameterProperties>> parameters)
+        {
+            var nestedParameters = new Dictionary<string, TemplateParameterProperties>();
+            foreach (var p in parameters)
+            {
+                nestedParameters.Add(p.Key, new TemplateParameterProperties
+                {
+                    value = $"[parameters('{p.Key}')]"
+                });
+            }
+
+            NestedTemplateResource nestedTemplateResource = new NestedTemplateResource()
+            {
+                name = name,
+                type = "Microsoft.Resources/deployments",
+                apiVersion = GlobalConstants.LinkedAPIVersion,
+                properties = new NestedTemplateProperties()
+                {
+                    mode = "Incremental",
+                    expressionEvaluationOptions = new NestedExpressionEvaluationOptions
+                    {
+                        scope = "inner"
+                    },
+                    template = nestedTemplate,
+                    parameters = nestedParameters
+                },
+                dependsOn = dependsOn
+            };
+            return nestedTemplateResource;
         }
 
         public Dictionary<string, TemplateParameterProperties> CreateMasterTemplateParameters(CreatorConfig creatorConfig)
