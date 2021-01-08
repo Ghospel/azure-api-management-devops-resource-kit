@@ -5,6 +5,7 @@ using Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract;
 using Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create;
 using Microsoft.Azure.Management.ApiManagement.ArmTemplates.Common;
 using Microsoft.Azure.Management.ApiManagement.ArmTemplates.Merge;
+using Microsoft.Azure.Management.ApiManagement.ArmTemplates.Link;
 
 namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates
 {
@@ -31,6 +32,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates
                 app.Commands.Add(new CreateCommand());
                 app.Commands.Add(new ExtractCommand());
                 app.Commands.Add(new MergeCommand());
+                app.Commands.Add(new NestCommand());
 
                 app.OnExecute(() => {
                     ColoredConsole.Error.WriteLine("No commands specified, please specify a command");
