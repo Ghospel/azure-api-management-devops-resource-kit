@@ -230,7 +230,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                 apiTemplateResource.properties.format = format;
                 apiTemplateResource.properties.value = value;
                 apiTemplateResource.properties.path = api.suffix;
-                apiTemplateResource.properties.serviceUrl = api.serviceUrl ?? $"[parameters('{ParameterNames.ServiceUrl}')]";
+                apiTemplateResource.properties.serviceUrl = api.serviceUrl ?? $"[parameters('{ParameterNames.ServiceUrl}').{ExtractorUtils.GenValidParamName(api.name, ParameterPrefix.Api)}]";
                
             }
             return apiTemplateResource;
