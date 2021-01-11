@@ -24,6 +24,11 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
             {
                 { ParameterNames.ApimServiceName, new TemplateParameterProperties(){ type = "string" } }
             };
+            
+            if (creatorConfig.paramPolicyNamedValue)
+            {
+                productTemplate.parameters.Add(ParameterNames.NamedValues, new TemplateParameterProperties { type = "object" });
+            }
 
             List<TemplateResource> resources = new List<TemplateResource>();
             foreach (ProductConfig product in creatorConfig.products)
@@ -55,7 +60,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                 if (product.policy != null)
                 {
                     string[] dependsOn = new string[] { $"[resourceId('Microsoft.ApiManagement/service/products', parameters('{ParameterNames.ApimServiceName}'), '{product.name}')]" };
-                    PolicyTemplateResource productPolicy = this.policyTemplateCreator.CreateProductPolicyTemplateResource(product, dependsOn);
+                    PolicyTemplateResource productPolicy = this.policyTemplateCreator.CreateProductPolicyTemplateResource(creatorConfig, product, dependsOn);
                     resources.Add(productPolicy);
                 }
 

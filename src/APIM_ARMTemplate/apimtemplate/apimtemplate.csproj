@@ -6,6 +6,7 @@
     <ProjectGuid>{B5183465-2BC1-4206-9C9F-5AC9615AC941}</ProjectGuid>
     <LangVersion>preview</LangVersion>
     <PackAsTool>true</PackAsTool>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
     <ToolCommandName>apim-templates</ToolCommandName>
     <Version>1.0.0</Version>
   </PropertyGroup>

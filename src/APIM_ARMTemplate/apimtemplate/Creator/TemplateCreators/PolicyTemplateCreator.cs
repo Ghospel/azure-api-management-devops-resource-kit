@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Azure.Management.ApiManagement.ArmTemplates.Common;
+using Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract;
 
 namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
 {
@@ -45,13 +47,17 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                 },
                 dependsOn = new string[] { }
             };
+
+            ProcessPolicy(policyTemplateResource, creatorConfig);
+
             resources.Add(policyTemplateResource);
 
             policyTemplate.resources = resources.ToArray();
+
             return policyTemplate;
         }
 
-        public PolicyTemplateResource CreateAPIPolicyTemplateResource(APIConfig api, string[] dependsOn)
+        public PolicyTemplateResource CreateAPIPolicyTemplateResource(CreatorConfig creatorConfig, APIConfig api, string[] dependsOn)
         {
             Uri uriResult;
             bool isUrl = Uri.TryCreate(api.policy, UriKind.Absolute, out uriResult) && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
@@ -69,10 +75,11 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                 },
                 dependsOn = dependsOn
             };
+            ProcessPolicy(policyTemplateResource, creatorConfig);
             return policyTemplateResource;
         }
 
-        public PolicyTemplateResource CreateProductPolicyTemplateResource(ProductConfig product, string[] dependsOn)
+        public PolicyTemplateResource CreateProductPolicyTemplateResource(CreatorConfig creatorConfig, ProductConfig product, string[] dependsOn)
         {
             if (string.IsNullOrEmpty(product.name))
             {
@@ -95,10 +102,11 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                 },
                 dependsOn = dependsOn
             };
+            ProcessPolicy(policyTemplateResource, creatorConfig);
             return policyTemplateResource;
         }
 
-        public PolicyTemplateResource CreateOperationPolicyTemplateResource(KeyValuePair<string, OperationsConfig> policyPair, string apiName, string[] dependsOn)
+        public PolicyTemplateResource CreateOperationPolicyTemplateResource(CreatorConfig creatorConfig, KeyValuePair<string, OperationsConfig> policyPair, string apiName, string[] dependsOn)
         {
             Uri uriResult;
             bool isUrl = Uri.TryCreate(policyPair.Value.policy, UriKind.Absolute, out uriResult) && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
@@ -116,18 +124,41 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                 },
                 dependsOn = dependsOn
             };
+            ProcessPolicy(policyTemplateResource, creatorConfig);
             return policyTemplateResource;
         }
 
-        public List<PolicyTemplateResource> CreateOperationPolicyTemplateResources(APIConfig api, string[] dependsOn)
+        public List<PolicyTemplateResource> CreateOperationPolicyTemplateResources(CreatorConfig creatorConfig, APIConfig api, string[] dependsOn)
         {
             // create a policy resource for each policy listed in the config file and its associated provided xml file
             List<PolicyTemplateResource> policyTemplateResources = new List<PolicyTemplateResource>();
             foreach (KeyValuePair<string, OperationsConfig> pair in api.operations)
             {
-                policyTemplateResources.Add(this.CreateOperationPolicyTemplateResource(pair, api.name, dependsOn));
+                policyTemplateResources.Add(this.CreateOperationPolicyTemplateResource(creatorConfig, pair, api.name, dependsOn));
             }
             return policyTemplateResources;
+        }
+
+        private void ProcessPolicy(PolicyTemplateResource policy, CreatorConfig creatorConfig)
+        {
+            if (creatorConfig.paramPolicyNamedValue)
+            {
+                var matches = Regex.Matches(policy.properties.value, "{{([a-zA-Z0-9-_]*)}}");
+
+                if (matches.Count > 0)
+                {
+                    var newValue = $"[concat('{policy.properties.value}')]";
+
+                    foreach (Match match in matches)
+                    {
+                        var param = match.Groups[1].Value;
+
+                        newValue = newValue.Replace(match.Value, $"', parameters('{ParameterNames.NamedValues}').{ExtractorUtils.GenValidParamName(param, ParameterPrefix.Property)}, '");
+                    }
+
+                    policy.properties.value = newValue;
+                }
+            }
         }
     }
 }

@@ -39,7 +39,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Test
             string[] dependsOn = new string[] { "dependsOn" };
 
             // act
-            PolicyTemplateResource policyTemplateResource = policyTemplateCreator.CreateAPIPolicyTemplateResource(api, dependsOn);
+            PolicyTemplateResource policyTemplateResource = policyTemplateCreator.CreateAPIPolicyTemplateResource(creatorConfig, api, dependsOn);
 
             // assert
             Assert.Equal($"[concat(parameters('ApimServiceName'), '/{api.name}/policy')]", policyTemplateResource.name);
@@ -70,7 +70,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Test
             string[] dependsOn = new string[] { "dependsOn" };
 
             // act
-            PolicyTemplateResource policyTemplateResource = policyTemplateCreator.CreateProductPolicyTemplateResource(product, dependsOn);
+            PolicyTemplateResource policyTemplateResource = policyTemplateCreator.CreateProductPolicyTemplateResource(creatorConfig, product, dependsOn);
 
             // assert
             Assert.Equal($"[concat(parameters('ApimServiceName'), '/{product.displayName}/policy')]", policyTemplateResource.name);
@@ -83,13 +83,14 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Test
         public void ShouldCreateOperationPolicyTemplateResourceFromPairWithCorrectContent()
         {
             // arrange
+            CreatorConfig creatorConfig = new CreatorConfig { };
             PolicyTemplateCreator policyTemplateCreator = PolicyTemplateCreatorFactory.GeneratePolicyTemplateCreator();
             KeyValuePair<string, OperationsConfig> policyPair = new KeyValuePair<string, OperationsConfig>("key", new OperationsConfig() { policy = "http://someurl.com" });
             string apiName = "apiName";
             string[] dependsOn = new string[] { "dependsOn" };
 
             // act
-            PolicyTemplateResource policyTemplateResource = policyTemplateCreator.CreateOperationPolicyTemplateResource(policyPair, apiName, dependsOn);
+            PolicyTemplateResource policyTemplateResource = policyTemplateCreator.CreateOperationPolicyTemplateResource(creatorConfig, policyPair, apiName, dependsOn);
 
             // assert
             Assert.Equal($"[concat(parameters('ApimServiceName'), '/{apiName}/{policyPair.Key}/policy')]", policyTemplateResource.name);

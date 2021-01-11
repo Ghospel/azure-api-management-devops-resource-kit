@@ -3,6 +3,10 @@
     "apimtemplate": {
       "commandName": "Project",
       "commandLineArgs": "nest --inputFile C:\\Projects\\triple-apim-devops/artifacts/function-app-apis/incidents-v1-subsequent.api.template.json --inputFile C:\\Projects\\triple-apim-devops/artifacts/incidents-v1/apimdevops-dev-incidents-v1.create-incident-api.template.json --outputFile C:\\Projects\\triple-apim-devops/artifacts/nested-arm/massive.json"
+    },
+    "apimtemplate-creator": {
+      "commandName": "Project",
+      "commandLineArgs": "create --configFile C:\\Projects\\triple-apim-devops/config/creator-config.yml"
     }
   }
 }

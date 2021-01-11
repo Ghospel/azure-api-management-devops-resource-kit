@@ -27,7 +27,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
             this.releaseTemplateCreator = releaseTemplateCreator;
         }
 
-        public async Task<List<Template>> CreateAPITemplatesAsync(APIConfig api)
+        public async Task<List<Template>> CreateAPITemplatesAsync(CreatorConfig creatorConfig, APIConfig api)
         {
             // determine if api needs to be split into multiple templates
             bool isSplit = isSplitAPI(api);
@@ -47,18 +47,18 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
             if (isSplit == true)
             {
                 // create 2 templates, an initial template with metadata and a subsequent template with the swagger content
-                apiTemplates.Add(await CreateAPITemplateAsync(api, isSplit, true));
-                apiTemplates.Add(await CreateAPITemplateAsync(api, isSplit, false));
+                apiTemplates.Add(await CreateAPITemplateAsync(creatorConfig, api, isSplit, true));
+                apiTemplates.Add(await CreateAPITemplateAsync(creatorConfig, api, isSplit, false));
             }
             else
             {
                 // create a unified template that includes both the metadata and swagger content 
-                apiTemplates.Add(await CreateAPITemplateAsync(api, isSplit, false));
+                apiTemplates.Add(await CreateAPITemplateAsync(creatorConfig, api, isSplit, false));
             }
             return apiTemplates;
         }
 
-        public async Task<Template> CreateAPITemplateAsync(APIConfig api, bool isSplit, bool isInitial)
+        public async Task<Template> CreateAPITemplateAsync(CreatorConfig creatorConfig, APIConfig api, bool isSplit, bool isInitial)
         {
             // create empty template
             Template apiTemplate = CreateEmptyTemplate();
@@ -68,6 +68,11 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
             {
                 { ParameterNames.ApimServiceName, new TemplateParameterProperties(){ type = "string" } }
             };
+
+            if (creatorConfig.paramPolicyNamedValue)
+            {
+                apiTemplate.parameters.Add(ParameterNames.NamedValues, new TemplateParameterProperties { type = "object" });
+            }
 
             if (String.IsNullOrEmpty(api.serviceUrl))
             {
@@ -81,23 +86,23 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
             // add the api child resources (api policies, diagnostics, etc) if this is the unified or subsequent template
             if (!isSplit || !isInitial)
             {
-                resources.AddRange(CreateChildResourceTemplates(api));
+                resources.AddRange(CreateChildResourceTemplates(creatorConfig, api));
             }
             apiTemplate.resources = resources.ToArray();
 
             return apiTemplate;
         }
 
-        public List<TemplateResource> CreateChildResourceTemplates(APIConfig api)
+        public List<TemplateResource> CreateChildResourceTemplates(CreatorConfig creatorConfig, APIConfig api)
         {
             List<TemplateResource> resources = new List<TemplateResource>();
             // all child resources will depend on the api
             string[] dependsOn = new string[] { $"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{ParameterNames.ApimServiceName}'), '{api.name}')]" };
 
-            PolicyTemplateResource apiPolicyResource = api.policy != null ? this.policyTemplateCreator.CreateAPIPolicyTemplateResource(api, dependsOn) : null;
-            List<PolicyTemplateResource> operationPolicyResources = api.operations != null ? this.policyTemplateCreator.CreateOperationPolicyTemplateResources(api, dependsOn) : null;
+            PolicyTemplateResource apiPolicyResource = api.policy != null ? this.policyTemplateCreator.CreateAPIPolicyTemplateResource(creatorConfig, api, dependsOn) : null;
+            List<PolicyTemplateResource> operationPolicyResources = api.operations != null ? this.policyTemplateCreator.CreateOperationPolicyTemplateResources(creatorConfig, api, dependsOn) : null;
             List<ProductAPITemplateResource> productAPIResources = api.products != null ? this.productAPITemplateCreator.CreateProductAPITemplateResources(api, dependsOn) : null;
-            List<TagAPITemplateResource> tagAPIResources = api.tags != null ? this.tagAPITemplateCreator.CreateTagAPITemplateResources(api,dependsOn) : null;
+            List<TagAPITemplateResource> tagAPIResources = api.tags != null ? this.tagAPITemplateCreator.CreateTagAPITemplateResources(api, dependsOn) : null;
             DiagnosticTemplateResource diagnosticTemplateResource = api.diagnostic != null ? this.diagnosticTemplateCreator.CreateAPIDiagnosticTemplateResource(api, dependsOn) : null;
             // add release resource if the name has been appended with ;rev{revisionNumber}
             ReleaseTemplateResource releaseTemplateResource = api.name.Contains(";rev") == true ? this.releaseTemplateCreator.CreateAPIReleaseTemplateResource(api, dependsOn) : null;
@@ -231,7 +236,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                 apiTemplateResource.properties.value = value;
                 apiTemplateResource.properties.path = api.suffix;
                 apiTemplateResource.properties.serviceUrl = api.serviceUrl ?? $"[parameters('{ParameterNames.ServiceUrl}').{ExtractorUtils.GenValidParamName(api.name, ParameterPrefix.Api)}]";
-               
+
             }
             return apiTemplateResource;
         }

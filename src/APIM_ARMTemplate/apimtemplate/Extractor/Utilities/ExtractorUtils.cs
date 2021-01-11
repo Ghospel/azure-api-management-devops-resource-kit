@@ -93,7 +93,6 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                 apiTemplate = await apiExtractor.GenerateAPIsARMTemplateAsync(singleApiName, multipleApiNames, exc);
             }
 
-            // TODO: config value for removing named values from policy template
             if (exc.paramPolicyNamedValue)
             {
                 foreach (var policy in apiTemplate.resources.OfType<PolicyTemplateResource>())
