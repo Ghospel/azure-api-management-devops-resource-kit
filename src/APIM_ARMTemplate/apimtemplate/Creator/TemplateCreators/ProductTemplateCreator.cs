@@ -27,7 +27,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
             
             if (creatorConfig.paramPolicyNamedValue)
             {
-                productTemplate.parameters.Add(ParameterNames.NamedValues, new TemplateParameterProperties { type = "object" });
+                productTemplate.parameters.Add(ParameterNames.NamedValuesInPolicy, new TemplateParameterProperties { type = "object" });
             }
 
             List<TemplateResource> resources = new List<TemplateResource>();

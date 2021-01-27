@@ -141,9 +141,13 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
             {
                 masterResourceTemplate.properties.parameters.Add(ParameterNames.PolicyXMLSasToken, new TemplateParameterProperties() { value = $"[parameters('{ParameterNames.PolicyXMLSasToken}')]" });
             }
-            if (exc.paramNamedValue || exc.paramPolicyNamedValue)
+            if (exc.paramNamedValue)
             {
                 masterResourceTemplate.properties.parameters.Add(ParameterNames.NamedValues, new TemplateParameterProperties() { value = $"[parameters('{ParameterNames.NamedValues}')]" });
+            }
+            if (exc.paramPolicyNamedValue)
+            {
+                masterResourceTemplate.properties.parameters.Add(ParameterNames.NamedValuesInPolicy, new TemplateParameterProperties() { value = $"[parameters('{ParameterNames.NamedValues}')]" });
             }
             return masterResourceTemplate;
         }
@@ -292,7 +296,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                 };
                 parameters.Add(ParameterNames.ServiceUrl, paramServiceUrlProperties);
             }
-            if (exc.paramNamedValue || exc.paramPolicyNamedValue)
+            if (exc.paramNamedValue)
             {
                 TemplateParameterProperties namedValueProperties = new TemplateParameterProperties()
                 {
@@ -303,6 +307,18 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                     type = "object"
                 };
                 parameters.Add(ParameterNames.NamedValues, namedValueProperties);
+            }
+            if (exc.paramPolicyNamedValue)
+            {
+                TemplateParameterProperties namedValueProperties = new TemplateParameterProperties()
+                {
+                    metadata = new TemplateParameterMetadata()
+                    {
+                        description = "Named values in policy parameters"
+                    },
+                    type = "object"
+                };
+                parameters.Add(ParameterNames.NamedValuesInPolicy, namedValueProperties);
             }
             if (exc.paramApiLoggerId)
             {
@@ -466,6 +482,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                     value = namedValues
                 };
                 parameters.Add(ParameterNames.NamedValues, namedValueProperties);
+                parameters.Add(ParameterNames.NamedValuesInPolicy, namedValueProperties);
             }
             if (exc.paramApiLoggerId)
             {
@@ -501,8 +518,8 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
 
         public string GenerateLinkedTemplateUri(string linkedTemplatesUrlQueryString, string linkedTemplatesSasToken, string fileName)
         {
-            string linkedTemplateUri = linkedTemplatesSasToken != null ? 
-            $"parameters('{ParameterNames.LinkedTemplatesBaseUrl}'), '{fileName}', parameters('{ParameterNames.LinkedTemplatesSasToken}')" 
+            string linkedTemplateUri = linkedTemplatesSasToken != null ?
+            $"parameters('{ParameterNames.LinkedTemplatesBaseUrl}'), '{fileName}', parameters('{ParameterNames.LinkedTemplatesSasToken}')"
             : $"parameters('{ParameterNames.LinkedTemplatesBaseUrl}'), '{fileName}'";
             return linkedTemplatesUrlQueryString != null ? $"[concat({linkedTemplateUri}, parameters('{ParameterNames.LinkedTemplatesUrlQueryString}'))]" : $"[concat({linkedTemplateUri})]";
         }

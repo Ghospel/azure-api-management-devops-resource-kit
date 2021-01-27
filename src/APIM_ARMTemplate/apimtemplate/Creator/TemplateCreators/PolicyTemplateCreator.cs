@@ -153,7 +153,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                     {
                         var param = match.Groups[1].Value;
 
-                        newValue = newValue.Replace(match.Value, $"', parameters('{ParameterNames.NamedValues}').{ExtractorUtils.GenValidParamName(param, ParameterPrefix.Property)}, '");
+                        newValue = newValue.Replace(match.Value, $"', parameters('{ParameterNames.NamedValuesInPolicy}').{ExtractorUtils.GenValidParamName(param, ParameterPrefix.Property)}, '");
                     }
 
                     policy.properties.value = newValue;

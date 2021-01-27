@@ -71,7 +71,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
 
             if (creatorConfig.paramPolicyNamedValue)
             {
-                apiTemplate.parameters.Add(ParameterNames.NamedValues, new TemplateParameterProperties { type = "object" });
+                apiTemplate.parameters.Add(ParameterNames.NamedValuesInPolicy, new TemplateParameterProperties { type = "object" });
             }
 
             if (String.IsNullOrEmpty(api.serviceUrl))
