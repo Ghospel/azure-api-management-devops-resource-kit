@@ -4,6 +4,7 @@ using Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract;
 
 namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
 {
+    // renamed to NamedValues in APIM
     public class PropertyTemplateCreator : TemplateCreator
     {
         public Template CreatePropertyTemplate(CreatorConfig creatorConfig)
@@ -42,8 +43,8 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                 PropertyTemplateResource propertyTemplateResource = new PropertyTemplateResource()
                 {
                     name = $"[concat(parameters('{ParameterNames.ApimServiceName}'), '/{namedValue.displayName}')]",
-                    type = ResourceTypeConstants.Property,
-                    apiVersion = GlobalConstants.APIVersion,
+                    type = ResourceTypeConstants.NamedValues,
+                    apiVersion = GlobalConstants.NamedValuesAPIVersion,
                     properties = new PropertyResourceProperties()
                     {
                         displayName = namedValue.displayName,
