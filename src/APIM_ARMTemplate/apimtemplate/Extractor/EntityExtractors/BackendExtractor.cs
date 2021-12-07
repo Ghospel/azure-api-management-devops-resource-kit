@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using System.Linq;
 using Newtonsoft.Json;
 using System;
+using apimtemplate.Common.TemplateModels;
 
 namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
 {
@@ -30,11 +31,32 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
             return await CallApiManagementAsync(azToken, requestUrl);
         }
 
-        public async Task<Template> GenerateBackendsARMTemplateAsync(string apimname, string resourceGroup, string singleApiName, List<TemplateResource> apiTemplateResources, List<TemplateResource> propertyResources, string policyXMLBaseUrl, string policyXMLSasToken)
+        /// <summary>
+        /// Generate the ARM assets for the backend resources
+        /// </summary>
+        /// <param name="apimname"></param>
+        /// <param name="resourceGroup"></param>
+        /// <param name="singleApiName"></param>
+        /// <param name="apiTemplateResources"></param>
+        /// <param name="propertyResources"></param>
+        /// <param name="policyXMLBaseUrl"></param>
+        /// <param name="policyXMLSasToken"></param>
+        /// <param name="extractBackendParameters"></param>
+        /// <returns>a combination of a Template and the value for the BackendSettings parameter</returns>
+        public async Task<Tuple<Template,Dictionary<string,BackendApiParameters> > > GenerateBackendsARMTemplateAsync(string apimname, string resourceGroup, string singleApiName, List<TemplateResource> apiTemplateResources, List<TemplateResource> propertyResources, Extractor exc)
         {
             Console.WriteLine("------------------------------------------");
             Console.WriteLine("Extracting backends from service");
-            Template armTemplate = GenerateEmptyTemplateWithParameters(policyXMLBaseUrl, policyXMLSasToken);
+            Template armTemplate = GenerateEmptyPropertyTemplateWithParameters();
+
+            if (exc.paramBackend)
+            {
+                TemplateParameterProperties extractBackendParametersProperties = new TemplateParameterProperties()
+                {
+                    type = "object"
+                };
+                armTemplate.parameters.Add(ParameterNames.BackendSettings, extractBackendParametersProperties);
+            }
 
             List<TemplateResource> templateResources = new List<TemplateResource>();
 
@@ -44,6 +66,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
 
             // pull all backends for service
             JObject oBackends = new JObject();
+            var oBackendParameters = new Dictionary<string, BackendApiParameters>();
             int skipNumberOfBackends = 0;
 
             do
@@ -61,32 +84,61 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                     backendTemplateResource.name = $"[concat(parameters('{ParameterNames.ApimServiceName}'), '/{backendName}')]";
                     backendTemplateResource.apiVersion = GlobalConstants.APIVersion;
 
+                    bool includeBackend = false;
                     ////only extract the backend if this is a full extraction, or in the case of a single api, if it is referenced by one of the policies
-                    //if (singleApiName == null)
-                    //{
-                    //    // if the user is extracting all apis, extract all the backends
-                    //    Console.WriteLine("'{0}' Backend found", backendName);
-                    //    templateResources.Add(backendTemplateResource);
-                    //}
-                    //else
-                    //{
-                    //    bool isReferencedInPolicy = false;
-                    //    foreach (PolicyTemplateResource policyTemplateResource in policyResources)
-                    //    {
-                    //        // the backend is used in a policy if the xml contains a set-backend-service policy, which will reference the backend's url or id
-                    //        string policyContent = policyTemplateResource.properties.policyContent;
-                    //        isReferencedInPolicy = DoesPolicyReferenceBackend(policyContent, namedValueResources,  backendName, backendTemplateResource);
-                    //    }
-                    //    if (isReferencedInPolicy == true)
-                    //    {
-                    //        // backend was used in policy, extract it
-                    //        Console.WriteLine("'{0}' Backend found", backendName);
-                    //        templateResources.Add(backendTemplateResource);
-                    //    }
-                    //}
+                    if (singleApiName == null)
+                    {
+                        // if the user is extracting all apis, extract all the backends
+                        includeBackend = true;
+                    }
+                    else
+                    {
+                        // check extracted policies to see if the backend is referenced.
+                        foreach (PolicyTemplateResource policyTemplateResource in policyResources)
+                        {
+                            string policyContent = ExtractorUtils.GetPolicyContent(exc, policyTemplateResource);
 
-                    Console.WriteLine("'{0}' Backend found", backendName);
-                    templateResources.Add(backendTemplateResource);
+                            if (DoesPolicyReferenceBackend(policyContent, namedValueResources, backendName, backendTemplateResource))
+                            {
+                                // backend was used in policy, extract it
+                                includeBackend = true;
+
+                                // dont need to go through all policies if the back end has already been found
+                                break;
+                            }
+                        }
+                    }
+
+                    if (includeBackend)
+                    {
+                        if (exc.paramBackend)
+                        {
+                            var apiToken = new BackendApiParameters();
+                            string validApiParamName = ExtractorUtils.GenValidParamName(backendName, ParameterPrefix.Diagnostic).ToLower();
+
+                            if (!string.IsNullOrEmpty(backendTemplateResource.properties.resourceId))
+                            {
+                                apiToken.resourceId = backendTemplateResource.properties.resourceId;
+                                backendTemplateResource.properties.resourceId = $"[parameters('{ParameterNames.BackendSettings}').{validApiParamName}.resourceId]";
+                            }
+
+                            if (!string.IsNullOrEmpty(backendTemplateResource.properties.url))
+                            {
+                                apiToken.url = backendTemplateResource.properties.url;
+                                backendTemplateResource.properties.url = $"[parameters('{ParameterNames.BackendSettings}').{validApiParamName}.url]";
+                            }
+
+                            if (!string.IsNullOrEmpty(backendTemplateResource.properties.protocol))
+                            {
+                                apiToken.protocol = backendTemplateResource.properties.protocol;
+                                backendTemplateResource.properties.protocol = $"[parameters('{ParameterNames.BackendSettings}').{validApiParamName}.protocol]";
+                            }
+                            oBackendParameters.Add(validApiParamName, apiToken);
+                        }
+
+                        Console.WriteLine("'{0}' Backend found", backendName);
+                        templateResources.Add(backendTemplateResource);
+                    }
                 }
 
                 skipNumberOfBackends += GlobalConstants.NumOfRecords;
@@ -94,7 +146,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
             while (oBackends["nextLink"] != null);
 
             armTemplate.resources = templateResources.ToArray();
-            return armTemplate;
+            return new Tuple<Template, Dictionary<string, BackendApiParameters>>(armTemplate, oBackendParameters);
         }
 
         public bool DoesPolicyReferenceBackend(string policyContent, IEnumerable<TemplateResource> namedValueResources, string backendName, BackendTemplateResource backendTemplateResource)
@@ -110,7 +162,8 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
             }
             foreach (PropertyTemplateResource namedValueResource in namedValueResourcesUsedByBackend)
             {
-                if (policyContent.Contains(namedValueResource.properties.displayName) || policyContent.Contains(namedValueResource.properties.value))
+                if ((namedValueResource.properties.displayName != null && policyContent.Contains(namedValueResource.properties.displayName)) ||
+                    (namedValueResource.properties.value != null && policyContent.Contains(namedValueResource.properties.value)))
                 {
                     return true;
                 }
@@ -125,6 +178,70 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
             return (namedValue == backendTemplateResource.properties.url
                 || namedValue == backendTemplateResource.properties.description
                 || namedValue == backendTemplateResource.properties.title);
+        }
+
+        public async Task<bool> IsNamedValueUsedInBackends(string apimname, string resourceGroup, string singleApiName, List<TemplateResource> apiTemplateResources, Extractor exc, string propertyName, string propertyDisplayName)
+        {
+            // isolate api and operation policy resources in the case of a single api extraction, as they may reference backends
+            var policyResources = apiTemplateResources.Where(resource => (resource.type == ResourceTypeConstants.APIPolicy || resource.type == ResourceTypeConstants.APIOperationPolicy || resource.type == ResourceTypeConstants.ProductPolicy));
+            var emptyNamedValueResources = new List<TemplateResource>();
+
+            // pull all backends for service
+            JObject oBackends = new JObject();
+            int skipNumberOfBackends = 0;
+
+            do
+            {
+                string backends = await GetBackendsAsync(apimname, resourceGroup, skipNumberOfBackends);
+                oBackends = JObject.Parse(backends);
+
+                foreach (var item in oBackends["value"])
+                {
+                    var content = item.ToString();
+
+                    // check if backend references the named value, credentials for example
+                    if (content.Contains(string.Concat("{{", propertyName, "}}")) || content.Contains(string.Concat("{{", propertyDisplayName, "}}")))
+                    {
+                        //only true if this is a full extraction, or in the case of a single api, if it is referenced by one of the API policies
+                        if (singleApiName == null)
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            // is this backend related to the single api?
+                            // is backend used in the extracted policies for this API
+                            // if backend id is referenced in policy
+                            // or a named value is referenced in policy to a backend, we have already checked the policy for named value.
+
+                            // check if this backend is used by any of the policies extracted
+                            string backendName = ((JValue)item["name"]).Value.ToString();
+                            string backend = await GetBackendDetailsAsync(apimname, resourceGroup, backendName);
+
+                            // convert returned backend to template resource class
+                            BackendTemplateResource backendTemplateResource = JsonConvert.DeserializeObject<BackendTemplateResource>(backend);
+
+                            // we have already checked if the named value is used in a policy, we just need to confirm if the backend is referenced by this single api within the policy file
+                            // this is why an empty named values must be passed to this method for validation
+                            foreach (PolicyTemplateResource policyTemplateResource in policyResources)
+                            {
+                                string policyContent = ExtractorUtils.GetPolicyContent(exc, policyTemplateResource);
+
+                                if (DoesPolicyReferenceBackend(policyContent, emptyNamedValueResources, backendName, backendTemplateResource))
+                                {
+                                    // dont need to go through all policies and backends if the named values has already been found
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                skipNumberOfBackends += GlobalConstants.NumOfRecords;
+            }
+            while (oBackends["nextLink"] != null);
+
+            return false;
         }
     }
 }
