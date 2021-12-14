@@ -129,7 +129,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
 
             fileWriter.WriteJSONToFile(apiTemplate, String.Concat(@dirName, apiFileName));
             // won't generate template when there is no resources
-            if (apiVersionSetTemplate.resources.Count() != 0)
+            if (apiVersionSetTemplate.resources.Count() != 0 && !exc.skipVersionSetTemplate)
             {
                 fileWriter.WriteJSONToFile(apiVersionSetTemplate, String.Concat(@dirName, fileNames.apiVersionSets));
             }

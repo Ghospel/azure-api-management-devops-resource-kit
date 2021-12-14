@@ -235,34 +235,38 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
 
             // convert returned api to template resource class
             JObject oApiDetails = JObject.Parse(apiDetails);
-            APITemplateResource apiResource = JsonConvert.DeserializeObject<APITemplateResource>(apiDetails);
 
-            apiResource.type = ((JValue)oApiDetails["type"]).Value.ToString();
-            apiResource.name = $"[concat(parameters('{ParameterNames.ApimServiceName}'), '/{apiName}')]";
-            apiResource.apiVersion = GlobalConstants.APIVersion;
-            apiResource.scale = null;
-
-            if (exc.paramServiceUrl)
+            if (!exc.skipVersionSetTemplate)
             {
-                apiResource.properties.serviceUrl = $"[parameters('{ParameterNames.ServiceUrl}').{ExtractorUtils.GenValidParamName(apiName, ParameterPrefix.Api)}]";
+                APITemplateResource apiResource = JsonConvert.DeserializeObject<APITemplateResource>(apiDetails);
+
+                apiResource.type = ((JValue)oApiDetails["type"]).Value.ToString();
+                apiResource.name = $"[concat(parameters('{ParameterNames.ApimServiceName}'), '/{apiName}')]";
+                apiResource.apiVersion = GlobalConstants.APIVersion;
+                apiResource.scale = null;
+
+                if (exc.paramServiceUrl)
+                {
+                    apiResource.properties.serviceUrl = $"[parameters('{ParameterNames.ServiceUrl}').{ExtractorUtils.GenValidParamName(apiName, ParameterPrefix.Api)}]";
+                }
+
+                if (apiResource.properties.apiVersionSetId != null)
+                {
+                    apiResource.dependsOn = new string[] { };
+
+                    string versionSetName = apiResource.properties.apiVersionSetId;
+                    int versionSetPosition = versionSetName.IndexOf("apiVersionSets/");
+
+                    versionSetName = versionSetName.Substring(versionSetPosition, (versionSetName.Length - versionSetPosition));
+                    apiResource.properties.apiVersionSetId = $"[concat(resourceId('Microsoft.ApiManagement/service', parameters('{ParameterNames.ApimServiceName}')), '/{versionSetName}')]";
+                }
+                else
+                {
+                    apiResource.dependsOn = new string[] { };
+                }
+
+                templateResources.Add(apiResource);
             }
-
-            if (apiResource.properties.apiVersionSetId != null)
-            {
-                apiResource.dependsOn = new string[] { };
-
-                string versionSetName = apiResource.properties.apiVersionSetId;
-                int versionSetPosition = versionSetName.IndexOf("apiVersionSets/");
-
-                versionSetName = versionSetName.Substring(versionSetPosition, (versionSetName.Length - versionSetPosition));
-                apiResource.properties.apiVersionSetId = $"[concat(resourceId('Microsoft.ApiManagement/service', parameters('{ParameterNames.ApimServiceName}')), '/{versionSetName}')]";
-            }
-            else
-            {
-                apiResource.dependsOn = new string[] { };
-            }
-
-            templateResources.Add(apiResource);
 
             templateResources.AddRange(await GetRelatedTemplateResourcesAsync(apiName, exc));
 

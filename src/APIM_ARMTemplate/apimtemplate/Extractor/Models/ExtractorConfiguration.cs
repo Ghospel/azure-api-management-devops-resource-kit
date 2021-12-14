@@ -30,6 +30,8 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
         public string splitAPIs { get; set; }
         [Description("Name of the apiVersionSet you want to extract")]
         public string apiVersionSetName { get; set; }
+        [Description("Skip creating the template of the apiVersionSet - use in conjunction with Creator")]
+        public bool skipVersionSetTemplate { get; set; }
         [Description("Includes all revisions for a single api - use with caution")]
         public string includeAllRevisions { get; set; }
         [Description("Specify base name of the template file")]
@@ -110,6 +112,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
         public string policyXMLBaseUrl { get; private set; }
         public string policyXMLSasToken { get; private set; }
         public string apiVersionSetName { get; private set; }
+        public bool skipVersionSetTemplate { get; private set; }
         public bool includeAllRevisions { get; private set; }
         public serviceUrlProperty[] serviceUrlParameters { get; set; }
         public bool paramServiceUrl { get; private set; }
@@ -135,6 +138,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
             this.policyXMLBaseUrl = exc.policyXMLBaseUrl;
             this.policyXMLSasToken = exc.policyXMLSasToken;
             this.apiVersionSetName = exc.apiVersionSetName;
+            this.skipVersionSetTemplate = exc.skipVersionSetTemplate;
             this.includeAllRevisions = exc.includeAllRevisions != null && exc.includeAllRevisions.Equals("true");
             this.serviceUrlParameters = exc.serviceUrlParameters;
             this.paramServiceUrl = (exc.paramServiceUrl != null && exc.paramServiceUrl.Equals("true")) || exc.serviceUrlParameters != null;
