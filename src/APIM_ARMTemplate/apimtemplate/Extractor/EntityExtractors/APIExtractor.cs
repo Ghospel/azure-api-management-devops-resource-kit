@@ -236,7 +236,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
             // convert returned api to template resource class
             JObject oApiDetails = JObject.Parse(apiDetails);
 
-            if (!exc.skipVersionSetTemplate)
+            if (!exc.skipVersionSetTemplate) // TODO: remove dependson to this + rename to notIncludeVersionSetTemplate
             {
                 APITemplateResource apiResource = JsonConvert.DeserializeObject<APITemplateResource>(apiDetails);
 
@@ -576,7 +576,12 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                 operationResource.scale = null;
 
                 // add operation dependencies and fix sample value if necessary
-                List<string> operationDependsOn = new List<string>() { $"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{ParameterNames.ApimServiceName}'), '{apiName}')]" };
+                List<string> operationDependsOn = new List<string>();
+                if (!exc.skipVersionSetTemplate)
+                {
+                    operationDependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{ParameterNames.ApimServiceName}'), '{apiName}')]");
+                }
+
                 foreach (OperationTemplateRepresentation operationTemplateRepresentation in operationResource.properties.request.representations)
                 {
                     AddSchemaDependencyToOperationIfNecessary(apiName, operationDependsOn, operationTemplateRepresentation);
@@ -687,7 +692,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
 
                 apiPoliciesResource.apiVersion = GlobalConstants.APIVersion;
                 apiPoliciesResource.name = $"[concat(parameters('{ParameterNames.ApimServiceName}'), '/{apiName}/{apiPoliciesResource.name}')]";
-                apiPoliciesResource.dependsOn = new string[] { $"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{ParameterNames.ApimServiceName}'), '{apiName}')]" };
+                apiPoliciesResource.dependsOn = !exc.skipVersionSetTemplate ? new string[] { $"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{ParameterNames.ApimServiceName}'), '{apiName}')]" } : Array.Empty<string>();
 
                 // write policy xml content to file and point to it if policyXMLBaseUrl is provided
                 if (policyXMLBaseUrl != null)
@@ -730,7 +735,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                     apiTagResource.name = $"[concat(parameters('{ParameterNames.ApimServiceName}'), '/{apiName}/{apiTagName}')]";
                     apiTagResource.apiVersion = GlobalConstants.APIVersion;
                     apiTagResource.scale = null;
-                    apiTagResource.dependsOn = new string[] { $"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{ParameterNames.ApimServiceName}'), '{apiName}')]" };
+                    apiTagResource.dependsOn = !exc.skipVersionSetTemplate ? new string[] { $"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{ParameterNames.ApimServiceName}'), '{apiName}')]" } : Array.Empty<string>();
                     templateResources.Add(apiTagResource);
                 }
             }
@@ -757,7 +762,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                     productAPIResource.name = $"[concat(parameters('{ParameterNames.ApimServiceName}'), '/{apiProductName}/{apiName}')]";
                     productAPIResource.apiVersion = GlobalConstants.APIVersion;
                     productAPIResource.scale = null;
-                    productAPIResource.dependsOn = new string[] { $"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{ParameterNames.ApimServiceName}'), '{apiName}')]" };
+                    productAPIResource.dependsOn = !exc.skipVersionSetTemplate ? new string[] { $"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{ParameterNames.ApimServiceName}'), '{apiName}')]" } : Array.Empty<string>();
 
                     templateResources.Add(productAPIResource);
                 }
@@ -781,7 +786,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                 diagnosticResource.type = ResourceTypeConstants.APIDiagnostic;
                 diagnosticResource.apiVersion = GlobalConstants.APIVersion;
                 diagnosticResource.scale = null;
-                diagnosticResource.dependsOn = new string[] { $"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{ParameterNames.ApimServiceName}'), '{apiName}')]" };
+                diagnosticResource.dependsOn = !exc.skipVersionSetTemplate ? new string[] { $"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{ParameterNames.ApimServiceName}'), '{apiName}')]" } : Array.Empty<string>();
 
                 if (exc.paramApiLoggerId)
                 {
