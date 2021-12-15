@@ -690,33 +690,36 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
             // add api policy resource to api template
             try
             {
-                string apiPolicies = await GetAPIPolicyAsync(apimname, resourceGroup, apiName);
-                Console.WriteLine("API policy found");
-                PolicyTemplateResource apiPoliciesResource = JsonConvert.DeserializeObject<PolicyTemplateResource>(apiPolicies);
-
-                apiPoliciesResource.apiVersion = GlobalConstants.APIVersion;
-                apiPoliciesResource.name = $"[concat(parameters('{ParameterNames.ApimServiceName}'), '/{apiName}/{apiPoliciesResource.name}')]";
-                apiPoliciesResource.dependsOn = !exc.skipVersionSetTemplate ? new string[] { $"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{ParameterNames.ApimServiceName}'), '{apiName}')]" } : Array.Empty<string>();
-
-                // write policy xml content to file and point to it if policyXMLBaseUrl is provided
-                if (policyXMLBaseUrl != null)
+                if (!exc.skipVersionSetTemplate)
                 {
-                    string policyXMLContent = apiPoliciesResource.properties.value;
-                    string policyFolder = String.Concat(fileFolder, $@"/policies");
-                    string apiPolicyFileName = $@"/{apiName}-apiPolicy.xml";
-                    this.fileWriter.CreateFolderIfNotExists(policyFolder);
-                    this.fileWriter.WriteXMLToFile(policyXMLContent, String.Concat(policyFolder, apiPolicyFileName));
-                    apiPoliciesResource.properties.format = "rawxml-link";
-                    if (policyXMLSasToken != null)
+                    string apiPolicies = await GetAPIPolicyAsync(apimname, resourceGroup, apiName);
+                    Console.WriteLine("API policy found");
+                    PolicyTemplateResource apiPoliciesResource = JsonConvert.DeserializeObject<PolicyTemplateResource>(apiPolicies);
+
+                    apiPoliciesResource.apiVersion = GlobalConstants.APIVersion;
+                    apiPoliciesResource.name = $"[concat(parameters('{ParameterNames.ApimServiceName}'), '/{apiName}/{apiPoliciesResource.name}')]";
+                    apiPoliciesResource.dependsOn = new string[] { $"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{ParameterNames.ApimServiceName}'), '{apiName}')]" };
+
+                    // write policy xml content to file and point to it if policyXMLBaseUrl is provided
+                    if (policyXMLBaseUrl != null)
                     {
-                        apiPoliciesResource.properties.value = $"[concat(parameters('{ParameterNames.PolicyXMLBaseUrl}'), '{apiPolicyFileName}', parameters('{ParameterNames.PolicyXMLSasToken}'))]";
+                        string policyXMLContent = apiPoliciesResource.properties.value;
+                        string policyFolder = String.Concat(fileFolder, $@"/policies");
+                        string apiPolicyFileName = $@"/{apiName}-apiPolicy.xml";
+                        this.fileWriter.CreateFolderIfNotExists(policyFolder);
+                        this.fileWriter.WriteXMLToFile(policyXMLContent, String.Concat(policyFolder, apiPolicyFileName));
+                        apiPoliciesResource.properties.format = "rawxml-link";
+                        if (policyXMLSasToken != null)
+                        {
+                            apiPoliciesResource.properties.value = $"[concat(parameters('{ParameterNames.PolicyXMLBaseUrl}'), '{apiPolicyFileName}', parameters('{ParameterNames.PolicyXMLSasToken}'))]";
+                        }
+                        else
+                        {
+                            apiPoliciesResource.properties.value = $"[concat(parameters('{ParameterNames.PolicyXMLBaseUrl}'), '{apiPolicyFileName}')]";
+                        }
                     }
-                    else
-                    {
-                        apiPoliciesResource.properties.value = $"[concat(parameters('{ParameterNames.PolicyXMLBaseUrl}'), '{apiPolicyFileName}')]";
-                    }
+                    templateResources.Add(apiPoliciesResource);
                 }
-                templateResources.Add(apiPoliciesResource);
             }
             catch (Exception) { }
             #endregion
