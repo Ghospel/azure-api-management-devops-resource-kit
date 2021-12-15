@@ -236,7 +236,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
             // convert returned api to template resource class
             JObject oApiDetails = JObject.Parse(apiDetails);
 
-            if (!exc.skipVersionSetTemplate) // TODO: remove dependson to this + rename to notIncludeVersionSetTemplate
+            if (!exc.skipVersionSetTemplate)
             {
                 APITemplateResource apiResource = JsonConvert.DeserializeObject<APITemplateResource>(apiDetails);
 
@@ -302,7 +302,11 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                     TemplateResource apiResource = apiResources.FirstOrDefault(resource => resource.type == ResourceTypeConstants.API) as TemplateResource;
                     List<TemplateResource> newResourcesList = ExtractorUtils.removeResourceType(ResourceTypeConstants.API, apiResources);
                     List<string> dependsOn = apiResource.dependsOn.ToList();
-                    dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{ParameterNames.ApimServiceName}'), '{apiName}')]");
+
+                    if (!exc.skipVersionSetTemplate)
+                    {
+                        dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{ParameterNames.ApimServiceName}'), '{apiName}')]");
+                    }
                     apiResource.dependsOn = dependsOn.ToArray();
                     newResourcesList.Add(apiResource);
 
@@ -454,7 +458,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
             return false;
         }
 
-        private async Task<List<TemplateResource>> GenerateSchemasARMTemplate(string apimServiceName, string apiName, string resourceGroup, string fileFolder)
+        private async Task<List<TemplateResource>> GenerateSchemasARMTemplate(string apimServiceName, string apiName, string resourceGroup, string fileFolder, Extractor exc)
         {
             List<TemplateResource> templateResources = new List<TemplateResource>();
 
@@ -475,7 +479,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
                 schemaDetailsResource.properties.document.value = GetSchemaValueBasedOnContentType(restReturnedSchemaTemplate.properties);
                 schemaDetailsResource.name = $"[concat(parameters('{ParameterNames.ApimServiceName}'), '/{apiName}/{schemaName}')]";
                 schemaDetailsResource.apiVersion = GlobalConstants.APIVersion;
-                schemaDetailsResource.dependsOn = new string[] { $"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{ParameterNames.ApimServiceName}'), '{apiName}')]" };
+                schemaDetailsResource.dependsOn = !exc.skipVersionSetTemplate ? new string[] { $"[resourceId('Microsoft.ApiManagement/service/apis', parameters('{ParameterNames.ApimServiceName}'), '{apiName}')]" } : Array.Empty<string>();
 
                 templateResources.Add(schemaDetailsResource);
 
@@ -531,7 +535,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract
 
             #region Schemas
             // add schema resources to api template
-            List<TemplateResource> schemaResources = await GenerateSchemasARMTemplate(apimname, apiName, resourceGroup, fileFolder);
+            List<TemplateResource> schemaResources = await GenerateSchemasARMTemplate(apimname, apiName, resourceGroup, fileFolder, exc);
             templateResources.AddRange(schemaResources);
             #endregion
 
