@@ -101,9 +101,8 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Test
                 diagnostic = new DiagnosticConfig()
                 {
                     name = "applicationinsights",
-                    paramName = true,
                     alwaysLog = "alwaysLog",
-                    loggerId = "loggerId",
+                    paramLoggerId = true,
                     sampling = new DiagnosticTemplateSampling()
                     {
                         samplingType = "samplingType",
@@ -157,10 +156,10 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Test
             DiagnosticTemplateResource diagnosticTemplateResource = diagnosticTemplateCreator.CreateAPIDiagnosticTemplateResource(api, dependsOn);
 
             // assert
-            Assert.Equal($"[concat(parameters('ApimServiceName'), '/{api.name}/', parameters('AppInsightsName'))]", diagnosticTemplateResource.name);
+            Assert.Equal($"[concat(parameters('ApimServiceName'), '/{api.name}/{api.diagnostic.name}')]", diagnosticTemplateResource.name);
             Assert.Equal(dependsOn, diagnosticTemplateResource.dependsOn);
             Assert.Equal(api.diagnostic.alwaysLog, diagnosticTemplateResource.properties.alwaysLog);
-            Assert.Equal($"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('ApimServiceName'), '{api.diagnostic.loggerId}')]", diagnosticTemplateResource.properties.loggerId);
+            Assert.Equal($"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('ApimServiceName'),  parameters('AppInsightsName'))]", diagnosticTemplateResource.properties.loggerId);
             Assert.Equal(api.diagnostic.enableHttpCorrelationHeaders, diagnosticTemplateResource.properties.enableHttpCorrelationHeaders);
             Assert.Equal(api.diagnostic.sampling.samplingType, diagnosticTemplateResource.properties.sampling.samplingType);
             Assert.Equal(api.diagnostic.sampling.percentage, diagnosticTemplateResource.properties.sampling.percentage);

@@ -198,7 +198,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                         }
                     }
                 }
-                if (api.diagnostic != null && api.diagnostic.loggerId == null)
+                if (api.diagnostic != null && (api.diagnostic.loggerId == null && api.diagnostic.paramLoggerId == false))
                 {
                     isValid = false;
                     throw new CommandParsingException(commandLineApplication, "LoggerId is required if an API diagnostic is provided");

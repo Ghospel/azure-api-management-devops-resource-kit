@@ -104,7 +104,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
     {
         public string name { get; set; }
 
-        public bool paramName { get; set; }
+        public bool paramLoggerId { get; set; }
     }
 
     public class LoggerConfig : LoggerTemplateProperties

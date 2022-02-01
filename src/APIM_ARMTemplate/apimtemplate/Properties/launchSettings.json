@@ -2,7 +2,7 @@
   "profiles": {
     "apimtemplate": {
       "commandName": "Project",
-      "commandLineArgs": "extract --extractorConfig \"config/extractor-config.json\"",
+      "commandLineArgs": "create --configFile  \"config/creator-config-busy-bits-v1.yml\"",
       "workingDirectory": "C:\\Projects\\citizenm-apim-configuration"
     }
   }

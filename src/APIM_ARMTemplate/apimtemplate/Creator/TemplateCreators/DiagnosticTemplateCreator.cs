@@ -9,9 +9,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
             // create diagnostic resource with properties
             DiagnosticTemplateResource diagnosticTemplateResource = new DiagnosticTemplateResource()
             {
-                name = api.diagnostic.paramName 
-                    ? $"[concat(parameters('{ParameterNames.ApimServiceName}'), '/{api.name}/', parameters('{ParameterNames.ApplicationInsightsName}'))]"
-                    : $"[concat(parameters('{ParameterNames.ApimServiceName}'), '/{api.name}/{api.diagnostic.name}')]",
+                name = $"[concat(parameters('{ParameterNames.ApimServiceName}'), '/{api.name}/{api.diagnostic.name}')]",
                 type = ResourceTypeConstants.APIDiagnostic,
                 apiVersion = GlobalConstants.APIVersion,
                 properties = new DiagnosticTemplateProperties()
@@ -25,10 +23,15 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                 dependsOn = dependsOn
             };
             // reference the provided logger if loggerId is provided
-            if (api.diagnostic.loggerId != null)
+            if (api.diagnostic.paramLoggerId)
+            {
+                diagnosticTemplateResource.properties.loggerId = $"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('{ParameterNames.ApimServiceName}'), parameters('{ParameterNames.ApplicationInsightsName}'))]";
+            }
+            else if (api.diagnostic.loggerId != null)
             {
                 diagnosticTemplateResource.properties.loggerId = $"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('{ParameterNames.ApimServiceName}'), '{api.diagnostic.loggerId}')]";
             }
+
             return diagnosticTemplateResource;
         }
     }
