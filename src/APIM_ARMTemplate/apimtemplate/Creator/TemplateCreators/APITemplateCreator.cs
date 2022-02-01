@@ -75,7 +75,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                 apiTemplate.parameters.Add(api.name + "-ServiceUrl", new TemplateParameterProperties() { type = "string" });
             }
 
-            if (api.diagnostic?.paramLoggerId == true)
+            if (api.diagnostic?.paramLoggerId == true && (!isSplit || !isInitial))
             {
                 apiTemplate.parameters.Add(ParameterNames.ApplicationInsightsName, new TemplateParameterProperties() { type = "string" });
         }
