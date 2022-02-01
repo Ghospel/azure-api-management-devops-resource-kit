@@ -75,6 +75,11 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                 apiTemplate.parameters.Add(api.name + "-ServiceUrl", new TemplateParameterProperties() { type = "string" });
             }
 
+            if (api.diagnostic.paramName)
+            {
+                apiTemplate.parameters.Add(ParameterNames.ApplicationInsightsName, new TemplateParameterProperties() { type = "string" });
+        }
+
             List<TemplateResource> resources = new List<TemplateResource>();
             // create api resource 
             APITemplateResource apiTemplateResource = await this.CreateAPITemplateResourceAsync(api, isSplit, isInitial);
