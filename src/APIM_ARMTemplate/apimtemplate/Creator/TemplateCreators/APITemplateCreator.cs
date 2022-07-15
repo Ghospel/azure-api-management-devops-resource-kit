@@ -84,9 +84,9 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                 if (api.diagnostic?.sampling == null)
                 {
                     apiTemplate.parameters.Add(ParameterNames.SamplingPercentage,
-                        new TemplateIntParameterProperties()
+                        new TemplateParameterProperties()
                         {
-                            defaultValue = 10,
+                            defaultValue = "10",
                             metadata = new TemplateParameterMetadata() { description = "Percentage of requests being logged" }
                         });
                 }
@@ -94,9 +94,9 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                 if (api.diagnostic?.frontend == null || api.diagnostic?.backend == null)
                 {
                     apiTemplate.parameters.Add(ParameterNames.MaxLoggingPayloadSize,
-                        new TemplateIntParameterProperties()
+                        new TemplateParameterProperties()
                         {
-                            defaultValue = 2048,
+                            defaultValue = "2048",
                             metadata = new TemplateParameterMetadata() { description = "Maximum number of payload bytes to log (up to 8192)" }
                         });
                 }
