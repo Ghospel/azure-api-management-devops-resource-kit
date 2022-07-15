@@ -86,6 +86,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                     apiTemplate.parameters.Add(ParameterNames.SamplingPercentage,
                         new TemplateParameterProperties()
                         {
+                            type = "string",
                             defaultValue = "10",
                             metadata = new TemplateParameterMetadata() { description = "Percentage of requests being logged" }
                         });
@@ -96,6 +97,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                     apiTemplate.parameters.Add(ParameterNames.MaxLoggingPayloadSize,
                         new TemplateParameterProperties()
                         {
+                            type = "string",
                             defaultValue = "2048",
                             metadata = new TemplateParameterMetadata() { description = "Maximum number of payload bytes to log (up to 8192)" }
                         });
