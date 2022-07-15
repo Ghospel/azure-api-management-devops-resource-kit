@@ -26,6 +26,12 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Common
         public new object value { get; set; }
     }
 
+    public class TemplateIntParameterProperties : TemplateParameterProperties
+    {
+        public new string type => "int";
+        public new int defaultValue { get; set; }
+    }
+
     public class TemplateParameterMetadata {
         public string description { get; set; }
     }

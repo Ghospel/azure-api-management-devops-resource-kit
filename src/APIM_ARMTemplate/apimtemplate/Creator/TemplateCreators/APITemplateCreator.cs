@@ -1,11 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using System;
+﻿using apimtemplate.Creator.Utilities;
 using Microsoft.Azure.Management.ApiManagement.ArmTemplates.Common;
-using apimtemplate.Creator.Utilities;
-using System.Net;
-using Microsoft.Azure.Management.ApiManagement.ArmTemplates.Extract;
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
 
 namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
 {
@@ -70,15 +69,38 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                 { ParameterNames.ApimServiceName, new TemplateParameterProperties(){ type = "string" } }
             };
 
-            if (!String.IsNullOrEmpty(api.serviceUrl))
+            if (!string.IsNullOrEmpty(api.serviceUrl))
             {
                 apiTemplate.parameters.Add(api.name + "-ServiceUrl", new TemplateParameterProperties() { type = "string" });
             }
 
-            if (api.diagnostic?.paramLoggerId == true && (!isSplit || !isInitial))
+            if (!isSplit || !isInitial)
             {
-                apiTemplate.parameters.Add(ParameterNames.ApplicationInsightsName, new TemplateParameterProperties() { type = "string" });
-        }
+                if (api.diagnostic?.paramLoggerId == true)
+                {
+                    apiTemplate.parameters.Add(ParameterNames.ApplicationInsightsName, new TemplateParameterProperties() { type = "string" });
+                }
+
+                if (api.diagnostic?.sampling == null)
+                {
+                    apiTemplate.parameters.Add(ParameterNames.SamplingPercentage,
+                        new TemplateIntParameterProperties()
+                        {
+                            defaultValue = 10,
+                            metadata = new TemplateParameterMetadata() { description = "Percentage of requests being logged" }
+                        });
+                }
+
+                if (api.diagnostic?.frontend == null || api.diagnostic?.backend == null)
+                {
+                    apiTemplate.parameters.Add(ParameterNames.MaxLoggingPayloadSize,
+                        new TemplateIntParameterProperties()
+                        {
+                            defaultValue = 2048,
+                            metadata = new TemplateParameterMetadata() { description = "Maximum number of payload bytes to log (up to 8192)" }
+                        });
+                }
+            }
 
             List<TemplateResource> resources = new List<TemplateResource>();
             // create api resource 
@@ -257,7 +279,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                 {
                     apiTemplateResource.properties.path = api.suffix;
                 }
-                
+
                 if (!String.IsNullOrEmpty(api.serviceUrl))
                 {
                     apiTemplateResource.properties.serviceUrl = MakeServiceUrl(api);

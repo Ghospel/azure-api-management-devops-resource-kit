@@ -27,6 +27,11 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Common
         public double percentage { get; set; }
     }
 
+    public class DiagnosticTemplateSamplingParameterized : DiagnosticTemplateSampling
+    {
+        public new string percentage { get; set; }
+    }
+
     public class DiagnosticTemplateFrontendBackend
     {
         public DiagnosticTemplateRequestResponse request { get; set; }
@@ -44,7 +49,8 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Common
         public int bytes { get; set; }
     }
 
-
-
-
+    public class DiagnosticTemplateRequestResponseBodyParameterized : DiagnosticTemplateRequestResponseBody
+    {
+        public new string bytes { get; set; }
+    }
 }

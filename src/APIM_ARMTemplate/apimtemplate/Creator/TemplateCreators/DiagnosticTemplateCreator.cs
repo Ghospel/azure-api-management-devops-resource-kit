@@ -32,6 +32,40 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Create
                 diagnosticTemplateResource.properties.loggerId = $"[resourceId('Microsoft.ApiManagement/service/loggers', parameters('{ParameterNames.ApimServiceName}'), '{api.diagnostic.loggerId}')]";
             }
 
+            // apply parameterization of diagnostics sampling percentage if nothing is supplied
+            if (diagnosticTemplateResource.properties.sampling == null)
+            {
+                diagnosticTemplateResource.properties.sampling =
+                    new DiagnosticTemplateSamplingParameterized()
+                    {
+                        samplingType = "fixed",
+                        percentage = $"[parameters('{ParameterNames.SamplingPercentage}')]"
+                    };
+            }
+
+            // apply parameterization of diagnostics payload logging size if nothing is supplied
+            var parameterizedBody = new DiagnosticTemplateRequestResponseBodyParameterized()
+            {
+                bytes = $"[parameters('{ParameterNames.MaxLoggingPayloadSize}')]"
+            };
+
+            if (diagnosticTemplateResource.properties.frontend == null)
+            {
+                diagnosticTemplateResource.properties.frontend = new DiagnosticTemplateFrontendBackend();
+                diagnosticTemplateResource.properties.frontend.request = new DiagnosticTemplateRequestResponse();
+                diagnosticTemplateResource.properties.frontend.request.body = parameterizedBody;
+                diagnosticTemplateResource.properties.frontend.response = new DiagnosticTemplateRequestResponse();
+                diagnosticTemplateResource.properties.frontend.response.body = parameterizedBody;
+            }
+
+            if (diagnosticTemplateResource.properties.backend == null)
+            {
+                diagnosticTemplateResource.properties.backend = new DiagnosticTemplateFrontendBackend();
+                diagnosticTemplateResource.properties.backend.request = new DiagnosticTemplateRequestResponse();
+                diagnosticTemplateResource.properties.backend.request.body = parameterizedBody;
+                diagnosticTemplateResource.properties.backend.response = new DiagnosticTemplateRequestResponse();
+                diagnosticTemplateResource.properties.backend.response.body = parameterizedBody;
+            }
             return diagnosticTemplateResource;
         }
     }

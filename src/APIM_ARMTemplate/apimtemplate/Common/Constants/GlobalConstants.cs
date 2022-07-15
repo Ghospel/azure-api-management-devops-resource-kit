@@ -41,6 +41,8 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Common
         public const string NamedValueKeyVaultSecrets = "NamedValueKeyVaultSecrets";
         public const string BackendSettings = "BackendSettings";
         public const string ApplicationInsightsName = "AppInsightsName";
+        public const string SamplingPercentage = "samplingPercentage";
+        public const string MaxLoggingPayloadSize = "maxLoggingPayloadSize";
     }
 
     public static class ParameterPrefix
