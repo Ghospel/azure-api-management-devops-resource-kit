@@ -18,7 +18,7 @@ namespace Microsoft.Azure.Management.ApiManagement.ArmTemplates.Common
         public const string NestName = "nest";
         public const string NestDescription = "Nest multiple ARM templates into a single ARM template";
 
-        public const string APIVersion = "2021-01-01-preview";
+        public const string APIVersion = "2023-03-01-preview";
         public const string LinkedAPIVersion = "2018-05-01";
         public const int NumOfRecords = 100;
 
